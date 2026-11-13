@@ -1,0 +1,17 @@
+{
+  "id": "system_monitor",
+  "name": "System load",
+  "version": "1.0.0",
+  "api_version": 1,
+  "author": "DeskOS contributors",
+  "description": "Compact CPU/RAM/disk widget fed by DeskOS's shared system monitor. Demonstrates the read-only 'system' permission.",
+  "entry": "main.py",
+  "permissions": ["widget", "system", "commands"],
+  "dependencies": ["PySide6"],
+  "widget": {
+    "type": "system_load",
+    "title": "System load",
+    "icon": "cpu",
+    "span": 1
+  }
+}

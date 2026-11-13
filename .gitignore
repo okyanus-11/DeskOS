@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+*.spec.bak
+.venv/
+venv/
+env/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Local development helpers (Qt runtime libraries used by the headless CI render)
+.qtlibs/
+
+# Runtime data must never be committed
+*.db
+*.db-wal
+*.db-shm
+deskos-data/
+
+# Packaging output
+release/
+*.exe
+*.msi
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

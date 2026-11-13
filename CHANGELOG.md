@@ -34,7 +34,7 @@ headless self-test.
   (Linux: `.desktop` entries), with recent applications and right-click pinning.
 - **Command palette**: fuzzy search over every command, keyboard navigation,
   global hotkey registration on Windows and in-app fallbacks everywhere.
-- **Control Centre**: appearance (theme, accent, wallpaper, transparency,
+- **Control Centre**: appearance (theme, accent, wallpaper, dock transparency,
   scaling, animations), system information, network adapters, application
   rescan, general behaviour, plugin management, configuration export/backup.
 - **Applications**: DeskFiles (browse, search, copy/cut/paste, rename, trash,
@@ -62,7 +62,27 @@ headless self-test.
 - **Packaging and docs**: PyInstaller spec and build scripts, icon generation
   script, screenshot renderer, README, architecture, plugin and build guides,
   contributing guide and this changelog.
-- **Quality gates**: 139 pytest tests, `--self-test` CLI check, compile check.
+- **Quality gates**: 160 pytest tests, `--self-test` CLI check, compile check.
+
+### Fixed
+
+- Wired the shell's notification/toast service into `DeskOSContext`, so toasts
+  from widgets, pages and plugins are actually shown.
+- The notifications toggle now suppresses toasts, and the animations toggle
+  disables toast fades instead of being ignored.
+- The appearance slider is labelled "Dock transparency" and drives the dock,
+  which is what it always changed; the unused duplicate setting and the dead
+  `wallpaper_fit` / `launch_at_login` keys were removed.
+- The dock now honours `dock.show_clock` and `dock.show_workspace` (both are in
+  its context menu), the launcher honours `launcher.columns`,
+  `launcher.show_recent` and `launcher.recent_count`, and `advanced.log_level`
+  and `advanced.discovery_cache_hours` are applied at startup.
+- DeskTerminal keeps its working-directory indicator in sync with `cd`.
+- Copying a file into the folder it already lives in is a no-op instead of
+  creating a duplicate copy.
+- PyInstaller builds on minimal Linux images bundle the Qt platform libraries
+  discovered through `LD_LIBRARY_PATH`, so the frozen app starts without a
+  wrapper script.
 
 ### Known limitations
 

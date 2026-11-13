@@ -35,6 +35,7 @@ def test_application_boots_and_shuts_down(tmp_path, monkeypatch, qapp):
         assert controller.dock is not None
         assert controller.config.path.is_file()
         assert controller.db.integrity_check()
+        assert controller.context.services["notifier"] == controller.notify
 
         providers = {plugin.metadata.id for plugin in controller.plugins.plugins}
         assert {"weather", "system_monitor"} <= providers

@@ -250,6 +250,8 @@ class Dock(QWidget):
             flags |= Qt.WindowType.WindowStaysOnTopHint
         self.setWindowFlags(flags)
         self.setWindowOpacity(float(self.ctx.config.get("dock.opacity", 0.92)))
+        self.clock_label.setVisible(bool(self.ctx.config.get("dock.show_clock", True)))
+        self.workspace_button.setVisible(bool(self.ctx.config.get("dock.show_workspace", True)))
         self.ctx.icons.clear_cache()
         self.refresh_pins()
         self.reposition()
@@ -414,9 +416,24 @@ class Dock(QWidget):
             lambda: self._toggle("dock.always_on_top"),
         )
         menu.addSeparator()
+        clock_action = menu.addAction("Show dock clock")
+        clock_action.setCheckable(True)
+        clock_action.setChecked(bool(self.ctx.config.get("dock.show_clock", True)))
+        clock_action.toggled.connect(lambda checked: self._set_option("dock.show_clock", checked))
+        workspace_action = menu.addAction("Show workspace switcher")
+        workspace_action.setCheckable(True)
+        workspace_action.setChecked(bool(self.ctx.config.get("dock.show_workspace", True)))
+        workspace_action.toggled.connect(
+            lambda checked: self._set_option("dock.show_workspace", checked)
+        )
+        menu.addSeparator()
         menu.addAction("Hide dock", self.hide_dock)
         menu.exec(self.panel.mapToGlobal(position))
 
     def _toggle(self, key: str) -> None:
         self.ctx.config.set(key, not bool(self.ctx.config.get(key, False)))
+        self.apply_config()
+
+    def _set_option(self, key: str, value: bool) -> None:
+        self.ctx.config.set(key, bool(value))
         self.apply_config()

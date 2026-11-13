@@ -41,7 +41,6 @@ def test_invalid_values_are_coerced_and_clamped(tmp_path):
                 "appearance": {
                     "theme": "not-a-theme",
                     "accent": "chartreuse",
-                    "transparency": 5.0,
                     "ui_scale": "1.25",
                 },
                 "dock": {"size": 1000, "autohide": "yes"},
@@ -55,7 +54,6 @@ def test_invalid_values_are_coerced_and_clamped(tmp_path):
     config.load()
     assert config.get("appearance.theme") == "catppuccin-mocha"
     assert config.get("appearance.accent") == "blue"
-    assert config.get("appearance.transparency") == 1.0
     assert config.get("appearance.ui_scale") == 1.25
     assert config.get("dock.size") == 96
     assert config.get("dock.autohide") is True

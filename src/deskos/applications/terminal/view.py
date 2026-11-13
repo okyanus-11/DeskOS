@@ -270,6 +270,7 @@ class TerminalPage(AppPage):
         if self._process is None or self._process.state() == QProcess.ProcessState.NotRunning:
             self.append_text("No shell process is running.\n", error=True)
             return
+        self._track_directory(command)
         payload = command + ("\r\n" if os.name == "nt" else "\n")
         self._process.write(payload.encode("utf-8"))
         self._process.waitForBytesWritten(500)
@@ -284,6 +285,28 @@ class TerminalPage(AppPage):
             return
         log.warning("terminal process error: %s", error)
         self.append_text(f"[terminal error: {error}]\n", error=True)
+
+    def _track_directory(self, command: str) -> None:
+        """Keep the working-directory label in sync with simple ``cd`` commands."""
+        stripped = command.strip()
+        if not stripped.startswith("cd"):
+            return
+        remainder = stripped[2:].strip()
+        if remainder.startswith("/d "):  # cmd.exe "cd /d C:\path"
+            remainder = remainder[3:].strip()
+        remainder = remainder.strip().strip('"').strip("'")
+        if not remainder or remainder == "-":
+            return
+        target = Path(remainder).expanduser()
+        if not target.is_absolute():
+            target = Path(self._cwd) / target
+        try:
+            resolved = target.resolve()
+        except OSError:
+            return
+        if resolved.is_dir():
+            self._cwd = str(resolved)
+            self.cwd_label.setText(self._cwd)
 
     # ---------------------------------------------------------------- events
     def eventFilter(self, watched, event) -> None:  # noqa: N802

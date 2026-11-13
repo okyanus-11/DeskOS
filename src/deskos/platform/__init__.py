@@ -39,7 +39,9 @@ __all__ = [
 _backend: PlatformBackend | None = None
 
 
-def get_backend(refresh: bool = False) -> PlatformBackend:
+def get_backend(
+    refresh: bool = False, discovery_cache_hours: int | None = None
+) -> PlatformBackend:
     """Return the singleton backend for the current platform."""
     global _backend
     if _backend is not None and not refresh:
@@ -48,7 +50,7 @@ def get_backend(refresh: bool = False) -> PlatformBackend:
     if sys.platform == "win32":
         from deskos.platform.windows import WindowsBackend
 
-        _backend = WindowsBackend()
+        _backend = WindowsBackend(cache_hours=discovery_cache_hours or 6)
     elif sys.platform.startswith("linux"):
         from deskos.platform.linux import LinuxBackend
 

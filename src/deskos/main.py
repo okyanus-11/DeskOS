@@ -82,7 +82,9 @@ def main(argv: list[str] | None = None) -> int:
     from deskos.app import DeskOSApplication
 
     try:
-        controller = DeskOSApplication(app, safe_mode=args.safe_mode)
+        controller = DeskOSApplication(
+            app, safe_mode=args.safe_mode, debug=args.debug
+        )
     except Exception as exc:
         log.exception("DeskOS failed to start")
         headless = QGuiApplication.platformName() in ("offscreen", "minimal", "vnc")

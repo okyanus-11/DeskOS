@@ -68,9 +68,9 @@ def copy_items(paths: Iterable[str], destination: str, *, move: bool = False) ->
     for raw in paths:
         source = Path(raw)
         try:
-            if source.resolve() == target.resolve():
+            if source.is_file() and source.parent.resolve() == target.resolve():
                 affected.append(str(source))
-                continue  # copying a file into its own folder is a no-op
+                continue  # copying a file into the folder it already lives in is a no-op
             destination_path = unique_destination(target, source.name)
             if source.is_dir():
                 shutil.copytree(source, destination_path)

@@ -403,9 +403,12 @@ class EmptyState(QWidget):
 class Toast(QWidget):
     """Transient message shown near the bottom of a window."""
 
-    def __init__(self, parent: QWidget, text: str, timeout_ms: int = 3200) -> None:
+    def __init__(
+        self, parent: QWidget, text: str, timeout_ms: int = 3200, animate: bool = True
+    ) -> None:
         super().__init__(parent)
         self.setObjectName("Toast")
+        self._animate = animate
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
         layout = QHBoxLayout(self)
         layout.setContentsMargins(16, 10, 16, 10)
@@ -413,7 +416,7 @@ class Toast(QWidget):
         self.label.setWordWrap(False)
         layout.addWidget(self.label)
         self._effect = QGraphicsOpacityEffect(self)
-        self._effect.setOpacity(0.0)
+        self._effect.setOpacity(0.0 if animate else 1.0)
         self.setGraphicsEffect(self._effect)
         self._animation = QPropertyAnimation(self._effect, b"opacity", self)
         self._animation.setDuration(180)
@@ -421,10 +424,14 @@ class Toast(QWidget):
         self._animation.setEndValue(1.0)
         self._animation.setEasingCurve(QEasingCurve.Type.OutCubic)
         self.adjustSize()
-        self._animation.start()
+        if animate:
+            self._animation.start()
         QTimer.singleShot(timeout_ms, self._fade_out)
 
     def _fade_out(self) -> None:
+        if not self._animate:
+            self.deleteLater()
+            return
         self._animation.setStartValue(self._effect.opacity())
         self._animation.setEndValue(0.0)
         self._animation.setDuration(220)
@@ -451,8 +458,8 @@ class ToastHost(QWidget):
         self.hide()
         self._toasts: list[Toast] = []
 
-    def notify(self, message: str, timeout_ms: int = 3200) -> None:
-        toast = Toast(self.parentWidget() or self, message, timeout_ms)
+    def notify(self, message: str, timeout_ms: int = 3200, animate: bool = True) -> None:
+        toast = Toast(self.parentWidget() or self, message, timeout_ms, animate)
         toast.show()
         toast.reposition()
         toast.raise_()

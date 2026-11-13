@@ -148,7 +148,7 @@ def test_files_page_navigates(context, qapp, tmp_path):
     page.deleteLater()
 
 
-def test_terminal_runs_real_shell(context, qapp):
+def test_terminal_runs_real_shell(context, qapp, tmp_path):
     build_services(context, qapp)
     from deskos.applications.terminal.view import TerminalPage
 
@@ -165,6 +165,12 @@ def test_terminal_runs_real_shell(context, qapp):
         if "deskos-42" in page.output.toPlainText():
             break
     assert "deskos-42" in page.output.toPlainText(), page.output.toPlainText()
+
+    folder = tmp_path / "nested dir"
+    folder.mkdir()
+    page.send_command(f'cd "{folder}"')
+    assert page.cwd_label.text() == str(folder.resolve())
+
     page.on_closing()
     page.deleteLater()
 
@@ -207,6 +213,79 @@ def test_clock_and_ai_windows_construct(context, qapp):
     ai = DeskAIWindow(context)
     assert ai.provider_label.text()
     ai.close()
+
+
+def test_notification_setting_controls_toasts(context, qapp):
+    build_services(context, qapp)
+    received = []
+    context.services["notifier"] = lambda message, timeout: received.append(message)
+    context.toast("first")
+    assert received == ["first"]
+    context.config.set("general.notifications", False)
+    context.toast("second")
+    assert received == ["first"]
+
+
+def test_dock_visibility_settings(context, qapp):
+    from types import SimpleNamespace
+
+    build_services(context, qapp)
+    context.services["shell"] = SimpleNamespace(
+        show_launcher=lambda: None, select_page=lambda page: None
+    )
+    from deskos.ui.dock import Dock
+
+    dock = Dock(context)
+    context.services["dock"] = dock
+    dock.apply_config()
+    assert not dock.clock_label.isHidden()
+    assert not dock.workspace_button.isHidden()
+
+    context.config.set("dock.show_clock", False)
+    context.config.set("dock.show_workspace", False)
+    dock.apply_config()
+    assert dock.clock_label.isHidden()
+    assert dock.workspace_button.isHidden()
+
+    context.config.set("dock.show_clock", True)
+    context.config.set("dock.show_workspace", True)
+    dock.apply_config()
+    assert not dock.clock_label.isHidden()
+    assert not dock.workspace_button.isHidden()
+    dock.close()
+
+
+def test_launcher_respects_layout_config(context, qapp):
+    build_services(context, qapp)
+    context.usage.record_launch("app.files", "DeskFiles")
+    context.config.set("launcher.columns", 4)
+    context.config.set("launcher.recent_count", 5)
+    context.config.set("launcher.show_recent", False)
+
+    from deskos.ui.launcher import LauncherOverlay
+
+    overlay = LauncherOverlay(context)
+    assert overlay.builtin_grid.max_columns == 4
+    assert overlay.installed_grid.max_columns == 4
+    assert overlay.recent_label.text() == ""
+
+    context.config.set("launcher.show_recent", True)
+    overlay._populate()
+    assert "DeskFiles" in overlay.recent_label.text()
+    overlay.hide()
+
+
+def test_toast_can_skip_animation(context, qapp):
+    from PySide6.QtWidgets import QWidget
+
+    from deskos.ui.components import Toast
+
+    host = QWidget()
+    toast = Toast(host, "instant", animate=False)
+    assert toast._effect.opacity() == 1.0
+    assert toast._animate is False
+    toast._fade_out()
+    host.deleteLater()
 
 
 def test_theme_switch_repaints_shell(context, qapp):

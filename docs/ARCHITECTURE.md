@@ -63,6 +63,11 @@ and apps. It exposes the config, database, repositories, bus, theme, icons,
 monitor, launcher-facing services (`ctx.services`), workspace manager, widget
 registry, command registry and plugin manager.
 
+The shell registers its `notify()` method as the `notifier` service, which is
+what `DeskOSContext.toast()` and plugin notifications call. The shell decides
+between an in-window toast (respecting the notifications and animations
+settings) and a tray balloon when the window is hidden.
+
 `EventBus` is a tiny synchronous publish/subscribe helper for cross-cutting
 notifications (`theme.changed`, `workspace.changed`, `dock.changed`,
 `config.changed`, `plugin.changed`). It is deliberately not a general message

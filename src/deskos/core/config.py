@@ -39,8 +39,6 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "theme": "catppuccin-mocha",
         "accent": "blue",
         "wallpaper": "",
-        "wallpaper_fit": "cover",
-        "transparency": 0.94,
         "animations": True,
         "ui_scale": 1.0,
     },
@@ -51,7 +49,6 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "start_with_dashboard": True,
         "show_dock": True,
         "close_to_tray": True,
-        "launch_at_login": False,
         "confirm_commands": True,
     },
     "window": {"width": 1280, "height": 820, "x": None, "y": None, "maximized": False},
@@ -128,7 +125,6 @@ DEFAULT_CONFIG: dict[str, Any] = {
 
 # (minimum, maximum) for numeric settings, applied after type coercion.
 RANGES: dict[str, tuple[float, float]] = {
-    "appearance.transparency": (0.4, 1.0),
     "appearance.ui_scale": (0.8, 1.6),
     "dock.size": (36, 96),
     "dock.opacity": (0.4, 1.0),

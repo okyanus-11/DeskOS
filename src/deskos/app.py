@@ -50,9 +50,12 @@ log = logging.getLogger(__name__)
 class DeskOSApplication(QObject):
     """Owns the QApplication plus the DeskOS object graph."""
 
-    def __init__(self, app: QApplication, *, safe_mode: bool = False) -> None:
+    def __init__(
+        self, app: QApplication, *, safe_mode: bool = False, debug: bool = False
+    ) -> None:
         super().__init__()
         self.app = app
+        self.debug = debug
         self.app.setApplicationName("DeskOS")
         self.app.setApplicationVersion(__version__)
         self.app.setOrganizationName("DeskOS")
@@ -68,6 +71,9 @@ class DeskOSApplication(QObject):
         self.config = ConfigManager(bus=self.bus)
         self.config.load()
         set_language(str(self.config.get("general.language", "en")))
+        if not debug:
+            level_name = str(self.config.get("advanced.log_level", "INFO")).upper()
+            logging.getLogger().setLevel(getattr(logging, level_name, logging.INFO))
 
         self.theme = ThemeManager(self.config, self.bus)
         self.icons = IconProvider(self.theme)
@@ -82,7 +88,9 @@ class DeskOSApplication(QObject):
         self.ai_history = AIHistoryRepository(self.db)
         self.plugin_state = PluginStateRepository(self.db)
 
-        self.platform = get_backend()
+        self.platform = get_backend(
+            discovery_cache_hours=int(self.config.get("advanced.discovery_cache_hours", 6))
+        )
         self.commands = CommandRegistry()
         self.widget_registry = WidgetRegistry()
         register_builtin_widgets(self.widget_registry)
@@ -120,6 +128,7 @@ class DeskOSApplication(QObject):
                 "launcher": self.launcher,
                 "catalog": self.catalog,
                 "apply_theme": self.apply_theme,
+                "notifier": self.notify,
                 "quitting": False,
             }
         )
@@ -279,7 +288,11 @@ class DeskOSApplication(QObject):
             log.info("notification suppressed: %s", message)
             return
         if self.main_window.isVisible():
-            self.toast_host.notify(message, timeout_ms)
+            self.toast_host.notify(
+                message,
+                timeout_ms,
+                animate=bool(self.config.get("appearance.animations", True)),
+            )
         elif self.tray is not None:
             try:
                 self.tray.showMessage("DeskOS", message)

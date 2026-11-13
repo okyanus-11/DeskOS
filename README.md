@@ -237,7 +237,7 @@ The most useful keys:
 ```jsonc
 {
   "appearance": { "theme": "catppuccin-mocha", "accent": "blue", "ui_scale": 1.0 },
-  "general":    { "close_to_tray": true, "launch_at_login": false },
+  "general":    { "close_to_tray": true, "start_with_dashboard": true },
   "dock":       { "position": "bottom", "autohide": false, "pinned": ["app.files"] },
   "palette":    { "shortcut": "Meta+Space", "fallback_shortcut": "Ctrl+Alt+Space",
                   "custom_commands": [{ "title": "Open projects", "command": "explorer C:\\Projects" }] },
@@ -254,11 +254,12 @@ pip install -e ".[dev]"
 QT_QPA_PLATFORM=offscreen python -m pytest
 ```
 
-The suite contains 139 tests covering configuration validation, database
+The suite contains 160 tests covering configuration validation, database
 migrations and repositories, fuzzy matching, theme generation, platform
 discovery and launch helpers, plugin loading/permissions/error isolation,
 widgets, system sampling, workspaces, AI providers and credential handling,
-GUI construction, the terminal's real shell round-trip, and full application
+DeskFiles filesystem operations, Windows hotkey/autostart bookkeeping, GUI
+construction, the terminal's real shell round-trip, and full application
 startup/shutdown. GUI tests use Qt's `offscreen` platform plugin, so they run
 without a display.
 

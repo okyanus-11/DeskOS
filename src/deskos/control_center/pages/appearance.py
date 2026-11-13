@@ -108,7 +108,7 @@ class AppearancePage(QWidget):
         effects_card = Card()
         effects_card.layout.addWidget(SectionTitle("Effects & scaling"))
         transparency_row = QHBoxLayout()
-        transparency_row.addWidget(QLabel("Panel transparency"))
+        transparency_row.addWidget(QLabel("Dock transparency"))
         self.transparency = QSlider(Qt.Orientation.Horizontal)
         self.transparency.setRange(40, 100)
         self.transparency.valueChanged.connect(self._on_transparency)
@@ -156,7 +156,7 @@ class AppearancePage(QWidget):
 
         wallpaper = str(self.ctx.config.get("appearance.wallpaper", ""))
         self.wallpaper_label.setText(wallpaper or "No custom wallpaper")
-        self.transparency.setValue(int(float(self.ctx.config.get("appearance.transparency", 0.94)) * 100))
+        self.transparency.setValue(int(float(self.ctx.config.get("dock.opacity", 0.92)) * 100))
         self.scale_slider.setValue(int(float(self.ctx.config.get("appearance.ui_scale", 1.0)) * 100))
         animations = bool(self.ctx.config.get("appearance.animations", True))
         self.animations_button.setChecked(not animations)
@@ -173,7 +173,6 @@ class AppearancePage(QWidget):
 
     def _on_transparency(self, value: int) -> None:
         self.transparency_value.setText(f"{value}%")
-        self.ctx.config.set("appearance.transparency", value / 100.0)
         self.ctx.config.set("dock.opacity", max(0.4, value / 100.0))
         dock = self.ctx.services.get("dock")
         if dock is not None:

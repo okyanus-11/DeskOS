@@ -82,12 +82,12 @@ class LauncherOverlay(QWidget):
 
         self.pinned_title = SectionTitle("Pinned and DeskOS apps")
         content_layout.addWidget(self.pinned_title)
-        self.builtin_grid = AdaptiveGrid(158, 6, 10)
+        self.builtin_grid = AdaptiveGrid(158, self._configured_columns(), 10)
         content_layout.addWidget(self.builtin_grid)
 
         self.installed_title = SectionTitle("Installed applications")
         content_layout.addWidget(self.installed_title)
-        self.installed_grid = AdaptiveGrid(158, 6, 10)
+        self.installed_grid = AdaptiveGrid(158, self._configured_columns(), 10)
         content_layout.addWidget(self.installed_grid)
         content_layout.addStretch(1)
 
@@ -125,7 +125,16 @@ class LauncherOverlay(QWidget):
         if self._tiles:
             self._select(0)
 
+    def _configured_columns(self) -> int:
+        try:
+            return max(3, min(10, int(self.ctx.config.get("launcher.columns", 6))))
+        except (TypeError, ValueError):
+            return 6
+
     def _populate(self) -> None:
+        columns = self._configured_columns()
+        self.builtin_grid.max_columns = columns
+        self.installed_grid.max_columns = columns
         self.builtin_grid.clear()
         self.installed_grid.clear()
         self._tiles.clear()
@@ -151,7 +160,12 @@ class LauncherOverlay(QWidget):
             self.installed_grid.add(tile)
             self._tiles.append(tile)
 
-        recent = self.ctx.app_registry.recent(3)
+        show_recent = bool(self.ctx.config.get("launcher.show_recent", True))
+        try:
+            recent_count = max(1, min(12, int(self.ctx.config.get("launcher.recent_count", 6))))
+        except (TypeError, ValueError):
+            recent_count = 6
+        recent = self.ctx.app_registry.recent(recent_count) if show_recent else []
         if recent:
             names = ", ".join(item["name"] for item in recent)
             self.recent_label.setText(f"Recently used: {names}")

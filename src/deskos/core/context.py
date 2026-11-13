@@ -65,6 +65,8 @@ class DeskOSContext:
 
     def toast(self, message: str, timeout_ms: int = 3200) -> None:
         """Show a transient notification if the shell is running."""
+        if not bool(self.config.get("general.notifications", True)):
+            return
         notifier = self.services.get("notifier")
         if callable(notifier):
             notifier(message, timeout_ms)

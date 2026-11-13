@@ -12,12 +12,12 @@ from deskos.platform.windows.terminal import WindowsTerminal
 
 
 class WindowsBackend(PlatformBackend):
-    def __init__(self, discovery_cache=None) -> None:
+    def __init__(self, discovery_cache=None, cache_hours: int = 6) -> None:
         cache = discovery_cache or (cache_dir() / "applications-windows.json")
         super().__init__(
             name="windows",
             display_name="Windows",
-            apps=WindowsAppDiscovery(cache_path=cache),
+            apps=WindowsAppDiscovery(cache_path=cache, cache_hours=cache_hours),
             terminal=WindowsTerminal(),
             files=WindowsFiles(),
             system=WindowsSystem(),

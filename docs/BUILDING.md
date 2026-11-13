@@ -75,8 +75,14 @@ dist\
     _internal\        # Qt, Python, assets/, plugins/
 ```
 
-Output: `dist\DeskOS\DeskOS.exe`. The script prints the exact path and runs the
-packaged executable with `--self-test` first when the platform allows it.
+Output: `dist\DeskOS\DeskOS.exe`. The script prints the exact path. To package
+it, zip the whole `dist\DeskOS` folder (the `_internal` folder must stay next to
+the executable).
+
+The repository also contains `.github/workflows/build.yml`, which builds and
+smoke-tests the Windows executable on `windows-latest` (and a Linux archive on
+`ubuntu-latest`) and uploads both as workflow artifacts. Trigger it from the
+Actions tab with **Run workflow**, or push a `v*` tag.
 
 Why one-folder: Qt ships dozens of DLLs and plugin folders. One-file builds
 unpack to a temporary directory on every launch (slow, and antivirus tools tend

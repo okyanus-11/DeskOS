@@ -275,6 +275,15 @@ This creates a one-folder PyInstaller build at `dist\DeskOS\DeskOS.exe` with
 the icons, styles and bundled plugins. The executable is unsigned; Windows
 SmartScreen will warn until you sign it.
 
+Prebuilt Windows and Linux archives are produced by the **Build executables**
+workflow: open the repository's
+[Actions page](https://github.com/okyanus-11/DeskOS/actions/workflows/build.yml),
+choose a run, and download `DeskOS-windows-x64` or `DeskOS-linux-x64` from its
+Artifacts section. The Windows job builds on `windows-latest` and runs
+`DeskOS.exe --self-test` before uploading, so the packaged executable is
+smoke-tested on Windows. Extract the zip and run `DeskOS.exe` — the `_internal`
+folder next to it is required.
+
 ## Project layout
 
 ```

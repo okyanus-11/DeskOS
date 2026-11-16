@@ -461,7 +461,7 @@ class ConfigManager:
 
     def toggle_theme(self) -> str:
         current = self.get("appearance.theme")
-        new = "catppuccin-latte" if current == "catppuccin-mocha" else "catppuccin-mocha"
+        new = "catppuccin-latte" if current in {"graphite", "catppuccin-mocha"} else "graphite"
         self.set("appearance.theme", new)
         return new
 

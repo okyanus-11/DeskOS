@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
 
 from deskos.core.config import ALLOWED_ACCENTS
 from deskos.core.context import DeskOSContext
-from deskos.core.theme import ACCENT_LABELS, PALETTES
+from deskos.core.theme import ACCENT_LABELS, PALETTES, readable_text_color
 from deskos.ui.components import Card, Muted, SectionTitle, scrollable
 
 log = logging.getLogger(__name__)
@@ -165,7 +165,7 @@ class AppearancePage(QWidget):
             custom = str(self.ctx.config.get("appearance.custom_accent", "#89b4fa"))
             self.accent_label.setText(f"Custom accent: {custom.upper()}")
             self.custom_accent_button.setStyleSheet(
-                f"QPushButton {{ background: {custom}; color: #11111b; "
+                f"QPushButton {{ background: {custom}; color: {readable_text_color(custom)}; "
                 "border: 1px solid transparent; border-radius: 9px; padding: 7px 12px; }"
             )
         else:

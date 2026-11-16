@@ -5,9 +5,11 @@ from __future__ import annotations
 import logging
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QButtonGroup,
     QFileDialog,
+    QColorDialog,
     QHBoxLayout,
     QLabel,
     QPushButton,
@@ -84,6 +86,12 @@ class AppearancePage(QWidget):
             swatches.addWidget(button)
         swatches.addStretch(1)
         accent_card.layout.addLayout(swatches)
+        custom_row = QHBoxLayout()
+        self.custom_accent_button = QPushButton("Choose custom colour…")
+        self.custom_accent_button.clicked.connect(self._choose_custom_accent)
+        custom_row.addWidget(self.custom_accent_button)
+        custom_row.addStretch(1)
+        accent_card.layout.addLayout(custom_row)
         self.accent_label = Muted("")
         accent_card.layout.addWidget(self.accent_label)
         layout.addWidget(accent_card)
@@ -148,11 +156,21 @@ class AppearancePage(QWidget):
             if button is not None:
                 button.setChecked(key == current_theme)
         accent = self.ctx.config.get("appearance.accent")
+        use_custom = bool(self.ctx.config.get("appearance.use_custom_accent", False))
         for index, key in enumerate(ALLOWED_ACCENTS):
             button = self._accent_group.button(index)
             if button is not None:
-                button.setChecked(key == accent)
-        self.accent_label.setText(f"Accent: {ACCENT_LABELS.get(str(accent), accent)}")
+                button.setChecked(key == accent and not use_custom)
+        if use_custom:
+            custom = str(self.ctx.config.get("appearance.custom_accent", "#89b4fa"))
+            self.accent_label.setText(f"Custom accent: {custom.upper()}")
+            self.custom_accent_button.setStyleSheet(
+                f"QPushButton {{ background: {custom}; color: #11111b; "
+                "border: 1px solid transparent; border-radius: 9px; padding: 7px 12px; }"
+            )
+        else:
+            self.accent_label.setText(f"Accent: {ACCENT_LABELS.get(str(accent), accent)}")
+            self.custom_accent_button.setStyleSheet("")
 
         wallpaper = str(self.ctx.config.get("appearance.wallpaper", ""))
         self.wallpaper_label.setText(wallpaper or "No custom wallpaper")
@@ -170,6 +188,13 @@ class AppearancePage(QWidget):
         self.theme.set_accent(key)
         self.accent_label.setText(f"Accent: {ACCENT_LABELS.get(key, key)}")
         self._apply_globals()
+
+    def _choose_custom_accent(self) -> None:
+        current = self.theme.accent
+        color = QColorDialog.getColor(QColor(current), self, "Choose custom accent")
+        if color.isValid():
+            self.theme.set_custom_accent(color.name())
+            self._apply_globals()
 
     def _on_transparency(self, value: int) -> None:
         self.transparency_value.setText(f"{value}%")

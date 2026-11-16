@@ -214,6 +214,8 @@ class ThemeManager:
         if key not in ACCENT_KEYS:
             log.warning("unknown accent %r requested", key)
             return
+        if key == self._accent and not self._use_custom_accent:
+            return
         self._accent = key
         self._use_custom_accent = False
         self.config.set("appearance.accent", key, save=save)

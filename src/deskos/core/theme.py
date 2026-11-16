@@ -293,7 +293,12 @@ class ThemeManager:
 
     def _announce(self) -> None:
         if self.bus is not None:
-            self.bus.emit("theme.changed", theme=self._palette.key, accent=self._accent)
+            self.bus.emit(
+                "theme.changed",
+                theme=self._palette.key,
+                accent=self.accent,
+                accent_name=self._accent,
+            )
 
     # ------------------------------------------------------------- QPalette
     def palette_spec(self) -> dict[str, str]:

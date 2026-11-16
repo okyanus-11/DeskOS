@@ -1,4 +1,4 @@
-"""The DeskOS design system: Catppuccin palettes, accents and generated QSS.
+"""The DeskOS design system: Graphite and Catppuccin palettes, accents and QSS.
 
 Every colour used by the UI comes from a :class:`Palette`.  The theme manager
 builds one global style sheet from those tokens, so switching between
@@ -46,6 +46,40 @@ class Palette:
     @property
     def is_dark(self) -> bool:
         return self.appearance == "dark"
+
+
+GRAPHITE = Palette(
+    key="graphite",
+    label="Graphite",
+    appearance="dark",
+    base="#10151d",
+    mantle="#141b24",
+    crust="#0b1017",
+    surface0="#19222d",
+    surface1="#2c3948",
+    surface2="#3a4b5d",
+    overlay0="#627286",
+    overlay1="#8292a3",
+    text="#edf3f8",
+    subtext0="#9aabba",
+    subtext1="#c1ccd7",
+    accents={
+        "rosewater": "#f3c4bd",
+        "flamingo": "#eaa7a7",
+        "pink": "#e8a4d2",
+        "mauve": "#b59cff",
+        "red": "#e87979",
+        "maroon": "#c96b7b",
+        "peach": "#e8a46f",
+        "yellow": "#e8bd78",
+        "green": "#58c99a",
+        "teal": "#45c6b0",
+        "sky": "#79d4e8",
+        "sapphire": "#58b6d9",
+        "blue": "#68a9ff",
+        "lavender": "#a9b4ff",
+    },
+)
 
 
 MOCHA = Palette(
@@ -114,7 +148,7 @@ LATTE = Palette(
     },
 )
 
-PALETTES: dict[str, Palette] = {palette.key: palette for palette in (MOCHA, LATTE)}
+PALETTES: dict[str, Palette] = {palette.key: palette for palette in (GRAPHITE, MOCHA, LATTE)}
 ACCENT_KEYS = tuple(ALLOWED_ACCENTS)
 ACCENT_LABELS = {key: key.replace("-", " ").title() for key in ACCENT_KEYS}
 
@@ -146,7 +180,7 @@ class ThemeManager:
         self.config = config
         self.bus = bus
         self._palette = PALETTES.get(
-            str(config.get("appearance.theme", MOCHA.key)), MOCHA
+            str(config.get("appearance.theme", GRAPHITE.key)), GRAPHITE
         )
         accent = str(config.get("appearance.accent", "blue"))
         self._accent = accent if accent in self._palette.accents else "blue"
@@ -241,14 +275,14 @@ class ThemeManager:
         self._announce()
 
     def toggle(self) -> str:
-        target = LATTE if self._palette.is_dark else MOCHA
+        target = LATTE if self._palette.is_dark else GRAPHITE
         self.set_theme(target.key)
         return target.key
 
     def apply_config(self) -> None:
         """Re-read theme/accent/scale from config (used after restore)."""
-        theme_key = str(self.config.get("appearance.theme", MOCHA.key))
-        self._palette = PALETTES.get(theme_key, MOCHA)
+        theme_key = str(self.config.get("appearance.theme", GRAPHITE.key))
+        self._palette = PALETTES.get(theme_key, GRAPHITE)
         accent = str(self.config.get("appearance.accent", "blue"))
         self._accent = accent if accent in self._palette.accents else "blue"
         self._use_custom_accent = bool(self.config.get("appearance.use_custom_accent", False))

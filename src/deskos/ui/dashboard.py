@@ -105,6 +105,8 @@ class DashboardView(QWidget):
         root.addWidget(scrollable(self.grid_host), 1)
 
         self._wallpaper: QPixmap | None = None
+        self._wallpaper_scaled: QPixmap | None = None
+        self._wallpaper_scaled_size: tuple[int, int] | None = None
         self._load_wallpaper()
         self.rebuild()
         ctx.bus.subscribe("workspace.changed", self._on_workspace_changed)
@@ -119,10 +121,14 @@ class DashboardView(QWidget):
         path = str(self.ctx.config.get("appearance.wallpaper", "") or "")
         if not path:
             self._wallpaper = None
+            self._wallpaper_scaled = None
+            self._wallpaper_scaled_size = None
             self.update()
             return
         pixmap = QPixmap(path)
         self._wallpaper = pixmap if not pixmap.isNull() else None
+        self._wallpaper_scaled = None
+        self._wallpaper_scaled_size = None
         if pixmap.isNull():
             log.warning("wallpaper could not be loaded: %s", path)
         self.update()
@@ -134,11 +140,18 @@ class DashboardView(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
         available = self.rect()
-        scaled = self._wallpaper.scaled(
-            available.size(),
-            Qt.AspectRatioMode.KeepAspectRatioByExpanding,
-            Qt.TransformationMode.SmoothTransformation,
-        )
+        target_size = (available.width(), available.height())
+        if (
+            self._wallpaper_scaled is None
+            or self._wallpaper_scaled_size != target_size
+        ):
+            self._wallpaper_scaled = self._wallpaper.scaled(
+                available.size(),
+                Qt.AspectRatioMode.KeepAspectRatioByExpanding,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+            self._wallpaper_scaled_size = target_size
+        scaled = self._wallpaper_scaled
         source_x = max(0, (scaled.width() - available.width()) // 2)
         source_y = max(0, (scaled.height() - available.height()) // 2)
         painter.drawPixmap(

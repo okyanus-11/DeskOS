@@ -75,3 +75,25 @@ def test_apply_config_reloads_theme(manager):
     manager.apply_config()
     assert manager.palette.key == LATTE.key
     assert manager.accent_name == "teal"
+
+
+
+def test_custom_accent_is_validated_and_persisted(manager):
+    manager.set_custom_accent("#12abef")
+    assert manager.accent == "#12abef"
+    assert manager.config.get("appearance.custom_accent") == "#12abef"
+    assert manager.config.get("appearance.use_custom_accent") is True
+    assert "#12abef" in manager.qss()
+
+
+def test_preset_accent_disables_custom_accent(manager):
+    manager.set_custom_accent("#12abef")
+    manager.set_accent("teal")
+    assert manager.accent == MOCHA.accents["teal"]
+    assert manager.config.get("appearance.use_custom_accent") is False
+
+
+def test_invalid_custom_accent_is_ignored(manager):
+    original = manager.accent
+    manager.set_custom_accent("not-a-colour")
+    assert manager.accent == original

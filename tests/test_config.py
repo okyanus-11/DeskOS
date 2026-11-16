@@ -15,7 +15,7 @@ def test_creates_defaults_when_missing(tmp_path):
     config = ConfigManager(path)
     data = config.load()
     assert path.is_file()
-    assert data["appearance"]["theme"] == "catppuccin-mocha"
+    assert data["appearance"]["theme"] == "graphite"
     assert data["dock"]["position"] == "bottom"
     assert data["version"] == DEFAULT_CONFIG["version"]
 
@@ -52,7 +52,7 @@ def test_invalid_values_are_coerced_and_clamped(tmp_path):
     )
     config = ConfigManager(path)
     config.load()
-    assert config.get("appearance.theme") == "catppuccin-mocha"
+    assert config.get("appearance.theme") == "graphite"
     assert config.get("appearance.accent") == "blue"
     assert config.get("appearance.ui_scale") == 1.25
     assert config.get("dock.size") == 96
@@ -80,7 +80,7 @@ def test_corrupt_config_is_preserved_and_recovered(tmp_path):
     corrupt_files = list(tmp_path.glob("config.json.corrupt-*"))
     assert corrupt_files, "the unreadable file should be preserved"
     assert corrupt_files[0].read_text(encoding="utf-8") == "{ this is not json"
-    assert data["appearance"]["theme"] == "catppuccin-mocha"
+    assert data["appearance"]["theme"] == "graphite"
     assert any("unreadable" in issue for issue in config.issues)
 
 
@@ -136,7 +136,7 @@ def test_toggle_theme_and_reset(tmp_path):
     config = ConfigManager(tmp_path / "config.json")
     config.load()
     assert config.toggle_theme() == "catppuccin-latte"
-    assert config.toggle_theme() == "catppuccin-mocha"
+    assert config.toggle_theme() == "graphite"
     config.set("dock.size", 80)
     config.reset()
     assert config.get("dock.size") == 56

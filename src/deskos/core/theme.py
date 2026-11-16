@@ -12,6 +12,8 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any
 
+from PySide6.QtGui import QColor
+
 from deskos.core.config import ALLOWED_ACCENTS, ConfigManager
 from deskos.core.events import EventBus
 
@@ -148,6 +150,10 @@ class ThemeManager:
         )
         accent = str(config.get("appearance.accent", "blue"))
         self._accent = accent if accent in self._palette.accents else "blue"
+        self._use_custom_accent = bool(config.get("appearance.use_custom_accent", False))
+        self._custom_accent = self._validated_custom_accent(
+            config.get("appearance.custom_accent", "#89b4fa")
+        )
 
     # -------------------------------------------------------------- state
     @property
@@ -160,7 +166,14 @@ class ThemeManager:
 
     @property
     def accent(self) -> str:
+        if self._use_custom_accent:
+            return self._custom_accent
         return self._palette.accents.get(self._accent, self._palette.text)
+
+    @staticmethod
+    def _validated_custom_accent(value: Any) -> str:
+        color = QColor(str(value or ""))
+        return color.name() if color.isValid() else "#89b4fa"
 
     @property
     def scale(self) -> float:
@@ -202,7 +215,20 @@ class ThemeManager:
             log.warning("unknown accent %r requested", key)
             return
         self._accent = key
+        self._use_custom_accent = False
         self.config.set("appearance.accent", key, save=save)
+        self.config.set("appearance.use_custom_accent", False, save=save)
+        self._announce()
+
+    def set_custom_accent(self, value: str, *, save: bool = True) -> None:
+        color = QColor(str(value))
+        if not color.isValid():
+            log.warning("invalid custom accent %r ignored", value)
+            return
+        self._custom_accent = color.name()
+        self._use_custom_accent = True
+        self.config.set("appearance.custom_accent", self._custom_accent, save=save)
+        self.config.set("appearance.use_custom_accent", True, save=save)
         self._announce()
 
     def toggle(self) -> str:
@@ -216,6 +242,10 @@ class ThemeManager:
         self._palette = PALETTES.get(theme_key, MOCHA)
         accent = str(self.config.get("appearance.accent", "blue"))
         self._accent = accent if accent in self._palette.accents else "blue"
+        self._use_custom_accent = bool(self.config.get("appearance.use_custom_accent", False))
+        self._custom_accent = self._validated_custom_accent(
+            self.config.get("appearance.custom_accent", "#89b4fa")
+        )
         self._announce()
 
     def _announce(self) -> None:

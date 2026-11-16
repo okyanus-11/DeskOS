@@ -88,3 +88,22 @@ def test_search_finds_nested_names(tmp_path):
     results = search_files(str(tmp_path), "alpha")
     assert results == [str(tmp_path / "deep" / "Alpha-Report.txt")]
     assert search_files(str(tmp_path), "   ") == []
+
+
+def test_copy_and_move_reject_folder_inside_itself(tmp_path):
+    source = tmp_path / "project"
+    source.mkdir()
+    (source / "important.txt").write_text("keep me", encoding="utf-8")
+    nested = source / "nested"
+    nested.mkdir()
+
+    copied = copy_items([str(source)], str(nested))
+    assert copied.ok is False
+    assert "subfolders" in copied.message
+    assert (source / "important.txt").read_text(encoding="utf-8") == "keep me"
+    assert not (nested / "project").exists()
+
+    moved = copy_items([str(source)], str(nested), move=True)
+    assert moved.ok is False
+    assert (source / "important.txt").read_text(encoding="utf-8") == "keep me"
+    assert source.is_dir()

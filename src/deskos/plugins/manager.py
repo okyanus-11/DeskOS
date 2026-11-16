@@ -29,12 +29,12 @@ class PluginManager:
             except OSError:
                 log.exception("could not scan plugin directory %s", directory)
 
-        user_root = user_plugins_dir().resolve()
+        user_root = user_plugins_dir().absolute()
         for record in list(self.loader.records.values()):
             plugin_path = record.metadata.path
             is_user_plugin = (
                 plugin_path is not None
-                and plugin_path.resolve().parent == user_root
+                and plugin_path.absolute().parent == user_root
             )
             # Bundled plugins are trusted with the application. Newly discovered
             # user plugins stay disabled until the user explicitly enables them.

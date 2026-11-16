@@ -29,9 +29,18 @@ class PluginManager:
             except OSError:
                 log.exception("could not scan plugin directory %s", directory)
 
+        user_root = user_plugins_dir().resolve()
         for record in list(self.loader.records.values()):
+            plugin_path = record.metadata.path
+            is_user_plugin = (
+                plugin_path is not None
+                and plugin_path.resolve().parent == user_root
+            )
+            # Bundled plugins are trusted with the application. Newly discovered
+            # user plugins stay disabled until the user explicitly enables them.
+            default_enabled = record.enabled and not is_user_plugin
             enabled = self.ctx.plugin_state.is_enabled(
-                record.metadata.id, default=record.enabled
+                record.metadata.id, default=default_enabled
             ) and not record.error
             record.enabled = enabled
             if not enabled:

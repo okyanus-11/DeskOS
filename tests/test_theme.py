@@ -97,3 +97,19 @@ def test_invalid_custom_accent_is_ignored(manager):
     original = manager.accent
     manager.set_custom_accent("not-a-colour")
     assert manager.accent == original
+
+
+@pytest.mark.parametrize(
+    ("accent", "expected"),
+    [("#326fd1", "#ffffff"), ("#68a9ff", "#10151d"), ("#b59cff", "#10151d")],
+)
+def test_readable_text_color_for_accent(accent, expected):
+    from deskos.core.theme import readable_text_color
+
+    assert readable_text_color(accent) == expected
+
+
+def test_readable_text_color_handles_invalid_input():
+    from deskos.core.theme import readable_text_color
+
+    assert readable_text_color("not-a-colour") == "#ffffff"

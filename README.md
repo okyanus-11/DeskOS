@@ -340,3 +340,7 @@ The Catppuccin palettes are from the Catppuccin project (MIT). Icons are
 original SVGs drawn for DeskOS. Weather data comes from
 [Open-Meteo](https://open-meteo.com/); installed-application icons are read from
 the system and are not redistributed.
+
+## Installation
+
+For prerequisites, environment setup, configuration, and run/build commands, see the [installation guide](INSTALLATION.md).

@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QListWidget,
     QListWidgetItem,
+    QMessageBox,
     QPushButton,
     QVBoxLayout,
     QWidget,
@@ -187,6 +188,29 @@ class PluginsPage(QWidget):
         record = self._current_record()
         if record is None or self.ctx.plugins is None:
             return
+        if checked:
+            plugin_path = record.metadata.path
+            is_user_plugin = (
+                plugin_path is not None
+                and plugin_path.resolve().parent == user_plugins_dir().resolve()
+            )
+            if is_user_plugin:
+                answer = QMessageBox.warning(
+                    self,
+                    "Run third-party plugin code?",
+                    "This user-installed plugin will execute Python code inside "
+                    "DeskOS with your account's permissions. Plugin permissions "
+                    "are not a security sandbox. Only enable it if you trust "
+                    "its source.",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.No,
+                )
+                if answer != QMessageBox.StandardButton.Yes:
+                    self.enable_box.blockSignals(True)
+                    self.enable_box.setChecked(False)
+                    self.enable_box.blockSignals(False)
+                    return
+
         self.ctx.plugins.set_enabled(record.metadata.id, checked)
         self.refresh()
         self.ctx.toast(f"{record.metadata.name} {'enabled' if checked else 'disabled'}")

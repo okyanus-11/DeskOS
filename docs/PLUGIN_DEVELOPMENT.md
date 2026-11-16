@@ -66,6 +66,12 @@ cannot use the provided HTTP helper, but it can still `import urllib` and make a
 request itself. DeskOS runs plugins in-process and cannot restrict arbitrary
 Python. Install only plugins you trust.
 
+New plugins discovered in the user plugin directory are **disabled by default**.
+Enabling one from Control Centre → Plugins displays an explicit warning because
+its Python code runs with the same operating-system permissions as DeskOS. This
+reduces accidental execution, but it does not sandbox a plugin after you enable
+it. Previously enabled plugins retain their saved enablement choice.
+
 ## Entry module and lifecycle
 
 ```python

@@ -208,3 +208,28 @@ class TestDiscoveryAndLoading:
         manager.discover_and_load()
         manager.set_enabled("demo", False)
         assert context.commands.get("plugin.demo.ping") is None
+
+
+def test_user_plugins_are_disabled_until_explicitly_enabled(
+    monkeypatch, context, tmp_path, qapp
+):
+    """New user-installed code must not execute automatically at startup."""
+    monkeypatch.setattr(
+        "deskos.plugins.manager.user_plugins_dir", lambda: tmp_path
+    )
+    write_plugin(tmp_path, "untrusted_user_plugin")
+
+    manager = PluginManager(context)
+    manager.directories = [tmp_path]
+    manager.discover_and_load()
+
+    record = manager.get("untrusted_user_plugin")
+    assert record is not None
+    assert record.enabled is False
+    assert record.loaded is False
+    assert context.widget_registry.get("demo_widget") is None
+
+    manager.set_enabled("untrusted_user_plugin", True)
+    assert record.enabled is True
+    assert record.loaded is True
+    assert context.widget_registry.get("demo_widget") is not None

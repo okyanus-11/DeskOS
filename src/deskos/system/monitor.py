@@ -8,12 +8,13 @@ and guarantees widgets show consistent numbers.
 from __future__ import annotations
 
 import logging
+import time
 from collections import deque
 from dataclasses import dataclass, field
 from typing import Any
 
 import psutil
-from PySide6.QtCore import QObject, QRunnable, QThreadPool, QTimer, Signal, Signal
+from PySide6.QtCore import QObject, QRunnable, QThreadPool, QTimer, Signal
 
 from deskos.system.info import disk_usage, network_summary, uptime_seconds
 
@@ -129,7 +130,7 @@ class SystemMonitor(QObject):
 
     # ---------------------------------------------------------------- sample
     def sample(self) -> MonitorSnapshot:
-        snapshot = MonitorSnapshot(timestamp=__import__("time").time())
+        snapshot = MonitorSnapshot(timestamp=time.time())
         try:
             snapshot.cpu_percent = float(psutil.cpu_percent(interval=None))
             snapshot.cpu_per_core = [float(value) for value in psutil.cpu_percent(percpu=True)]

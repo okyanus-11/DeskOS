@@ -71,18 +71,28 @@ def copy_items(paths: Iterable[str], destination: str, *, move: bool = False) ->
             if source.is_file() and source.parent.resolve() == target.resolve():
                 affected.append(str(source))
                 continue  # copying a file into the folder it already lives in is a no-op
+            if source.is_dir():
+                source_resolved = source.resolve()
+                target_resolved = target.resolve()
+                if source_resolved == target_resolved or source_resolved in target_resolved.parents:
+                    return OperationResult(
+                        False,
+                        "Cannot copy or move a folder into itself or one of its subfolders",
+                        affected,
+                    )
             destination_path = unique_destination(target, source.name)
             if source.is_dir():
                 shutil.copytree(source, destination_path)
             else:
                 shutil.copy2(source, destination_path)
             if move:
-                if source.is_dir():
+                # A directory symlink is a link, not a tree to recursively remove.
+                if source.is_dir() and not source.is_symlink():
                     shutil.rmtree(source)
                 else:
                     source.unlink()
             affected.append(str(destination_path))
-        except (OSError, shutil.Error) as exc:
+        except (OSError, shutil.Error, RuntimeError) as exc:
             log.warning("could not %s %s: %s", "move" if move else "copy", source, exc)
             return OperationResult(False, f"{source.name}: {exc}", affected)
     return OperationResult(True, "", affected)

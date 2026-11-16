@@ -36,9 +36,9 @@ CONFIG_VERSION = 1
 DEFAULT_CONFIG: dict[str, Any] = {
     "version": CONFIG_VERSION,
     "appearance": {
-        "theme": "catppuccin-mocha",
+        "theme": "graphite",
         "accent": "blue",
-        "custom_accent": "#89b4fa",
+        "custom_accent": "#68a9ff",
         "use_custom_accent": False,
         "wallpaper": "",
         "animations": True,
@@ -141,7 +141,7 @@ RANGES: dict[str, tuple[float, float]] = {
     "advanced.discovery_cache_hours": (1, 168),
 }
 
-ALLOWED_THEMES = ("catppuccin-mocha", "catppuccin-latte")
+ALLOWED_THEMES = ("graphite", "catppuccin-mocha", "catppuccin-latte")
 ALLOWED_ACCENTS = (
     "blue",
     "lavender",

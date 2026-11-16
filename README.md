@@ -46,8 +46,8 @@ telemetry and no background service.
 - **Optional DeskAI** assistant with pluggable providers (OpenAI-compatible,
   Anthropic, local Ollama). It can suggest commands, but never runs one without
   your explicit approval.
-- **Catppuccin Mocha (dark) and Latte (light)** themes, switchable at runtime,
-  with eleven accent colours and a generated Qt stylesheet.
+- **Graphite (default dark), Catppuccin Mocha and Latte** palettes, switchable at runtime, with twelve accent presets or a custom hex colour picker.
+- System metrics are sampled in a background worker; wallpaper scaling is cached between repaints.
 
 ## Screenshots
 

@@ -378,7 +378,7 @@ class ConfigManager:
             self.issues.append(
                 f"Unknown theme '{appearance.get('theme')}', falling back to Catppuccin Mocha"
             )
-            appearance["theme"] = "catppuccin-mocha"
+            appearance["theme"] = "graphite"
         if appearance.get("accent") not in ALLOWED_ACCENTS:
             self.issues.append(f"Unknown accent '{appearance.get('accent')}', using blue")
             appearance["accent"] = "blue"

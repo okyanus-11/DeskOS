@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from deskos.core.config import ConfigManager
-from deskos.core.theme import LATTE, MOCHA, PALETTES, ThemeManager
+from deskos.core.theme import GRAPHITE, LATTE, MOCHA, PALETTES, ThemeManager
 
 
 @pytest.fixture()
@@ -15,10 +15,10 @@ def manager(tmp_path):
     return ThemeManager(config)
 
 
-def test_default_palette_is_mocha(manager):
-    assert manager.palette.key == "catppuccin-mocha"
+def test_default_palette_is_graphite(manager):
+    assert manager.palette.key == "graphite"
     assert manager.palette.is_dark
-    assert {"catppuccin-mocha", "catppuccin-latte"} <= set(PALETTES)
+    assert {"graphite", "catppuccin-mocha", "catppuccin-latte"} <= set(PALETTES)
 
 
 def test_theme_switch_updates_config_and_qss(manager):
@@ -40,7 +40,7 @@ def test_accent_switch(manager):
 
 def test_unknown_theme_is_ignored(manager):
     manager.set_theme("nonsense")
-    assert manager.palette.key == MOCHA.key
+    assert manager.palette.key == GRAPHITE.key
     manager.set_accent("ultraviolet")
     assert manager.accent_name == "blue"
 
@@ -59,7 +59,7 @@ def test_alpha_helper(manager):
 
 def test_toggle_returns_new_key(manager):
     assert manager.toggle() == LATTE.key
-    assert manager.toggle() == MOCHA.key
+    assert manager.toggle() == GRAPHITE.key
 
 
 def test_tokens_expose_painting_colours(manager):

@@ -90,7 +90,7 @@ def test_corrupted_config_is_recovered_on_startup(tmp_path, monkeypatch, qapp):
     monkeypatch.setenv("DESKOS_HOME", str(home))
     controller = DeskOSApplication(qapp, safe_mode=True)
     try:
-        assert controller.config.get("appearance.theme") == "catppuccin-mocha"
+        assert controller.config.get("appearance.theme") == "graphite"
         assert list(home.glob("config.json.corrupt-*"))
     finally:
         controller.shutdown()

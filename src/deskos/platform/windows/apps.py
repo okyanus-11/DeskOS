@@ -20,6 +20,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import math
 import os
 import subprocess  # noqa: S404 - launching installed applications is the feature
 import time
@@ -298,13 +299,29 @@ class WindowsAppDiscovery(AppLauncher):
             return None
         if not isinstance(payload, dict):
             return None
-        created = float(payload.get("created", 0))
-        if time.time() - created > self.cache_hours * 3600:
+        try:
+            created = float(payload.get("created", 0))
+        except (TypeError, ValueError):
+            return None
+        now = time.time()
+        if not math.isfinite(created) or created <= 0 or created > now + 300:
+            return None
+        if now - created > self.cache_hours * 3600:
             return None
         raw_entries = payload.get("entries")
         if not isinstance(raw_entries, list):
             return None
-        entries = [AppEntry.from_dict(item) for item in raw_entries if isinstance(item, dict)]
+        entries: list[AppEntry] = []
+        for item in raw_entries:
+            if not isinstance(item, dict):
+                continue
+            try:
+                entry = AppEntry.from_dict(item)
+            except (TypeError, ValueError):
+                log.debug("ignoring malformed application cache entry")
+                continue
+            if entry.id and entry.name:
+                entries.append(entry)
         return entries or None
 
     def _save_cache(self, entries: list[AppEntry]) -> None:

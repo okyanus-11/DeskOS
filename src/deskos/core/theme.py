@@ -218,8 +218,10 @@ class ThemeManager:
             return
         self._accent = key
         self._use_custom_accent = False
-        self.config.set("appearance.accent", key, save=save)
-        self.config.set("appearance.use_custom_accent", False, save=save)
+        self.config.update(
+            {"appearance.accent": key, "appearance.use_custom_accent": False},
+            save=save,
+        )
         self._announce()
 
     def set_custom_accent(self, value: str, *, save: bool = True) -> None:
@@ -229,8 +231,13 @@ class ThemeManager:
             return
         self._custom_accent = color.name()
         self._use_custom_accent = True
-        self.config.set("appearance.custom_accent", self._custom_accent, save=save)
-        self.config.set("appearance.use_custom_accent", True, save=save)
+        self.config.update(
+            {
+                "appearance.custom_accent": self._custom_accent,
+                "appearance.use_custom_accent": True,
+            },
+            save=save,
+        )
         self._announce()
 
     def toggle(self) -> str:

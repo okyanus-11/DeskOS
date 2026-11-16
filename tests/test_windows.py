@@ -7,6 +7,9 @@ relies on.
 
 from __future__ import annotations
 
+import json
+import time
+
 import pytest
 
 from deskos.platform.windows import autostart as windows_autostart
@@ -114,3 +117,36 @@ class TestWindowsBackend:
         backend = WindowsBackend(cache_hours=24)
         assert backend.apps.cache_hours == 24
         assert backend.supports_global_hotkeys is True
+
+
+class TestWindowsAppDiscoveryCache:
+    def test_invalid_cache_timestamps_are_ignored(self, tmp_path):
+        from deskos.platform.windows.apps import WindowsAppDiscovery
+
+        cache = tmp_path / "apps.json"
+        discovery = WindowsAppDiscovery(cache_path=cache)
+        for created in ("not-a-timestamp", float("nan"), float("inf"), time.time() + 3600):
+            cache.write_text(
+                json.dumps({"created": created, "entries": []}),
+                encoding="utf-8",
+            )
+            assert discovery._load_cache() is None
+
+    def test_malformed_entries_do_not_discard_valid_cache_entries(self, tmp_path):
+        from deskos.platform.windows.apps import WindowsAppDiscovery
+
+        cache = tmp_path / "apps.json"
+        cache.write_text(
+            json.dumps({
+                "created": time.time(),
+                "entries": [
+                    {"id": "broken", "name": "Broken", "args": 42},
+                    {"id": "valid", "name": "Calculator", "args": []},
+                    "not-an-entry",
+                ],
+            }),
+            encoding="utf-8",
+        )
+        entries = WindowsAppDiscovery(cache_path=cache)._load_cache()
+        assert entries is not None
+        assert [(entry.id, entry.name) for entry in entries] == [("valid", "Calculator")]

@@ -13,13 +13,31 @@ from dataclasses import dataclass, field
 from typing import Any
 
 import psutil
-from PySide6.QtCore import QObject, QTimer, Signal
+from PySide6.QtCore import QObject, QRunnable, QThreadPool, QTimer, Signal, Signal
 
 from deskos.system.info import disk_usage, network_summary, uptime_seconds
 
 log = logging.getLogger(__name__)
 
 HISTORY_POINTS = 120
+
+
+class _SampleSignals(QObject):
+    finished = Signal(object)
+    failed = Signal(str)
+
+
+class _SampleWorker(QRunnable):
+    def __init__(self, monitor: "SystemMonitor") -> None:
+        super().__init__()
+        self.monitor = monitor
+        self.signals = _SampleSignals()
+
+    def run(self) -> None:
+        try:
+            self.signals.finished.emit(self.monitor.sample())
+        except Exception as error:
+            self.signals.failed.emit(str(error))
 
 
 @dataclass
@@ -59,7 +77,9 @@ class SystemMonitor(QObject):
         self.interval_ms = max(400, int(interval_ms))
         self._timer = QTimer(self)
         self._timer.setInterval(self.interval_ms)
-        self._timer.timeout.connect(self.sample)
+        self._timer.timeout.connect(self._request_sample)
+        self._sampling = False
+        self._worker: _SampleWorker | None = None
         self._last_net: tuple[float, int, int] | None = None
         self._last_disks: list[dict[str, Any]] = []
         self._last_interfaces: list[dict[str, Any]] = []
@@ -74,7 +94,7 @@ class SystemMonitor(QObject):
     def start(self) -> None:
         if not self._timer.isActive():
             self._timer.start()
-            self.sample()
+            self._request_sample()
 
     def stop(self) -> None:
         self._timer.stop()
@@ -86,6 +106,26 @@ class SystemMonitor(QObject):
     def set_interval(self, interval_ms: int) -> None:
         self.interval_ms = max(400, int(interval_ms))
         self._timer.setInterval(self.interval_ms)
+
+    def _request_sample(self) -> None:
+        """Collect metrics off the GUI thread and never queue overlapping work."""
+        if self._sampling:
+            return
+        self._sampling = True
+        worker = _SampleWorker(self)
+        self._worker = worker
+        worker.signals.finished.connect(self._sample_finished)
+        worker.signals.failed.connect(self._sample_failed)
+        QThreadPool.globalInstance().start(worker)
+
+    def _sample_finished(self, _snapshot: MonitorSnapshot) -> None:
+        self._sampling = False
+        self._worker = None
+
+    def _sample_failed(self, message: str) -> None:
+        self._sampling = False
+        self._worker = None
+        log.warning("background system sample failed: %s", message)
 
     # ---------------------------------------------------------------- sample
     def sample(self) -> MonitorSnapshot:

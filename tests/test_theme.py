@@ -33,9 +33,9 @@ def test_theme_switch_updates_config_and_qss(manager):
 def test_accent_switch(manager):
     manager.set_accent("mauve")
     assert manager.accent_name == "mauve"
-    assert manager.accent == MOCHA.accents["mauve"]
+    assert manager.accent == GRAPHITE.accents["mauve"]
     assert manager.config.get("appearance.accent") == "mauve"
-    assert MOCHA.accents["mauve"] in manager.qss()
+    assert GRAPHITE.accents["mauve"] in manager.qss()
 
 
 def test_unknown_theme_is_ignored(manager):
@@ -89,7 +89,7 @@ def test_custom_accent_is_validated_and_persisted(manager):
 def test_preset_accent_disables_custom_accent(manager):
     manager.set_custom_accent("#12abef")
     manager.set_accent("teal")
-    assert manager.accent == MOCHA.accents["teal"]
+    assert manager.accent == GRAPHITE.accents["teal"]
     assert manager.config.get("appearance.use_custom_accent") is False
 
 

@@ -152,6 +152,21 @@ PALETTES: dict[str, Palette] = {palette.key: palette for palette in (GRAPHITE, M
 ACCENT_KEYS = tuple(ALLOWED_ACCENTS)
 ACCENT_LABELS = {key: key.replace("-", " ").title() for key in ACCENT_KEYS}
 
+
+def readable_text_color(hex_color: str) -> str:
+    """Return near-black or white text with the stronger WCAG contrast."""
+    color = QColor(str(hex_color))
+    if not color.isValid():
+        return "#ffffff"
+
+    channels = (color.redF(), color.greenF(), color.blueF())
+    linear = tuple(
+        channel / 12.92 if channel <= 0.04045 else ((channel + 0.055) / 1.055) ** 2.4
+        for channel in channels
+    )
+    luminance = 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
+    return "#10151d" if luminance > 0.179 else "#ffffff"
+
 FONT_STACK = (
     '"Segoe UI Variable Text", "Segoe UI", "Inter", "Noto Sans", "Cantarell", '
     '"DejaVu Sans", sans-serif'

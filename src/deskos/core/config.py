@@ -38,6 +38,8 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "appearance": {
         "theme": "catppuccin-mocha",
         "accent": "blue",
+        "custom_accent": "#89b4fa",
+        "use_custom_accent": False,
         "wallpaper": "",
         "animations": True,
         "ui_scale": 1.0,

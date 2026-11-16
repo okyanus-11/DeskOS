@@ -192,7 +192,7 @@ class PluginsPage(QWidget):
             plugin_path = record.metadata.path
             is_user_plugin = (
                 plugin_path is not None
-                and plugin_path.resolve().parent == user_plugins_dir().resolve()
+                and plugin_path.absolute().parent == user_plugins_dir().absolute()
             )
             if is_user_plugin:
                 answer = QMessageBox.warning(

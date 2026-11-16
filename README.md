@@ -343,4 +343,4 @@ the system and are not redistributed.
 
 ## Installation
 
-For prerequisites, environment setup, configuration, and run/build commands, see the [installation guide](INSTALLATION.md).
+Requires Python 3.11+; Windows 10/11 is the primary target. Clone the repository, create and activate a virtual environment, install `requirements.txt`, install the project with `pip install -e .`, then launch with `python -m deskos`. See the [full installation guide](INSTALLATION.md) for Linux development notes and data-directory details.

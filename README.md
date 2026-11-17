@@ -272,18 +272,21 @@ See [docs/BUILDING.md](docs/BUILDING.md). In short:
 ```
 
 This creates a one-folder PyInstaller build at `dist\DeskOS\DeskOS.exe` with
-the icons, styles and bundled plugins. The executable is unsigned; Windows
-SmartScreen will warn until you sign it.
+the icons, styles and bundled plugins. The Windows build workflow also wraps
+that complete folder in a normal Inno Setup wizard installer:
+`DeskOS-Setup-1.0.0.exe`. It installs per-user, creates Start Menu shortcuts,
+offers an optional desktop shortcut, and registers a Windows uninstaller. The
+installer is unsigned; Windows SmartScreen may show an unfamiliar-app warning.
 
-Prebuilt Windows and Linux archives are attached to the
-[latest release](https://github.com/okyanus-11/DeskOS/releases/latest) and are
-also produced by the **Build executables** workflow: open the repository's
-[Actions page](https://github.com/okyanus-11/DeskOS/actions/workflows/build.yml),
-choose a run, and download `DeskOS-windows-x64` or `DeskOS-linux-x64` from its
-Artifacts section. The Windows job builds on `windows-latest` and runs
-`DeskOS.exe --self-test` before uploading, so the packaged executable is
-smoke-tested on Windows. Extract the zip and run `DeskOS.exe` — the `_internal`
-folder next to it is required.
+The [latest release](https://github.com/okyanus-11/DeskOS/releases/latest)
+contains the Windows setup installer, the portable Windows archive and the
+Linux archive. Main-branch builds are also available for 30 days from the
+**Build Windows installer and Linux package** workflow's
+[Actions page](https://github.com/okyanus-11/DeskOS/actions/workflows/build.yml).
+The Windows job builds on `windows-latest`, runs `DeskOS.exe --self-test`,
+silently installs the setup executable, launches the installed app's
+self-test, and verifies that uninstall removes program files without deleting
+the separate user-data directory.
 
 ## Project layout
 
@@ -321,8 +324,8 @@ tests/              pytest suite
 - Plugins are in-process and are not sandboxed (see above).
 - DeskAI requires your own API key or a local Ollama installation. No model is
   bundled and no request is made until you configure a provider.
-- There is no installer or auto-updater. PyInstaller output is unsigned and
-  built per machine.
+- A per-user Windows setup installer is available; it is currently unsigned.
+  Automatic updates and a signed MSI remain future work.
 - Linux support is a functional fallback (`.desktop` discovery, XDG paths,
   `gio trash`), but Windows is the supported target.
 

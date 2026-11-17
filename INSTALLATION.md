@@ -1,5 +1,11 @@
 # Installation
 
+## Windows installer
+
+Download `DeskOS-Setup-1.0.0.exe` from the [latest DeskOS GitHub Release](https://github.com/okyanus-11/DeskOS/releases/latest) and follow the setup wizard. It installs per-user under `%LOCALAPPDATA%\\Programs\\DeskOS`, creates a Start Menu shortcut, offers an optional desktop shortcut, and registers a standard Windows uninstaller. Python is not required on the target PC.
+
+The installer includes the complete PyInstaller application folder, including Qt's `_internal` runtime. Uninstalling removes the installed application and shortcuts but preserves `%APPDATA%\\DeskOS` (or the directory selected with `DESKOS_HOME`). Main-branch installers are available as 30-day GitHub Actions artifacts; tagged releases include the installer, portable Windows archive, Linux archive and SHA-256 checksums. The installer is unsigned, so Windows SmartScreen may show an unfamiliar-app warning.
+
 ## Requirements
 - Windows 10/11 (primary target); Linux is supported for development
 - Python 3.11 or newer

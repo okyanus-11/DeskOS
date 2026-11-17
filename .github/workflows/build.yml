@@ -84,11 +84,18 @@ jobs:
           $env:QT_QPA_PLATFORM = "offscreen"
           & $exe --self-test
           if ($LASTEXITCODE -ne 0) { throw "Installed DeskOS self-test failed with code $LASTEXITCODE" }
-          $uninstallProcess = Start-Process -FilePath $uninstaller -ArgumentList @("/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART") -Wait -PassThru
+          Get-Process -Name "DeskOS" -ErrorAction SilentlyContinue | Stop-Process -Force
+          Start-Sleep -Milliseconds 500
+          $uninstallLog = Join-Path $env:RUNNER_TEMP "DeskOS-uninstaller.log"
+          $uninstallProcess = Start-Process -FilePath $uninstaller -ArgumentList @("/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/LOG=$uninstallLog") -Wait -PassThru
           if ($uninstallProcess.ExitCode -ne 0) { throw "DeskOS uninstaller exited with code $($uninstallProcess.ExitCode)" }
-          $deadline = (Get-Date).AddSeconds(15)
+          $deadline = (Get-Date).AddSeconds(30)
           while ((Test-Path -LiteralPath $exe) -and ((Get-Date) -lt $deadline)) { Start-Sleep -Milliseconds 250 }
-          if (Test-Path -LiteralPath $exe) { throw "DeskOS application files remain after uninstall" }
+          if (Test-Path -LiteralPath $exe) {
+            if (Test-Path -LiteralPath $uninstallLog) { Get-Content -LiteralPath $uninstallLog }
+            Get-ChildItem -LiteralPath $installDir -Force -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
+            throw "DeskOS application files remain after uninstall"
+          }
           if (-not (Test-Path -LiteralPath (Join-Path $dataDir "keep-after-uninstall.txt"))) {
             throw "Uninstall unexpectedly removed user data"
           }

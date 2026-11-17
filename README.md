@@ -346,4 +346,6 @@ the system and are not redistributed.
 
 ## Installation
 
-Requires Python 3.11+; Windows 10/11 is the primary target. Clone the repository, create and activate a virtual environment, install `requirements.txt`, install the project with `pip install -e .`, then launch with `python -m deskos`. See the [full installation guide](INSTALLATION.md) for Linux development notes and data-directory details.
+**Windows 10/11:** download [DeskOS-Setup-1.0.0.exe from the latest release](https://github.com/okyanus-11/DeskOS/releases/latest) and follow the setup wizard. Python is not required. The installer creates a Start Menu shortcut, offers an optional desktop shortcut, and registers a standard uninstaller.
+
+**Linux or source development:** requires Python 3.11+. Clone the repository, create and activate a virtual environment, install `requirements.txt`, install the project with `pip install -e .`, then launch with `python -m deskos`. See the [full installation guide](INSTALLATION.md) for Linux development notes and data-directory details.

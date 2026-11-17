@@ -67,10 +67,17 @@ jobs:
           $dataDir = Join-Path $env:RUNNER_TEMP "DeskOS-user-data"
           New-Item -ItemType Directory -Force -Path $dataDir | Out-Null
           Set-Content -LiteralPath (Join-Path $dataDir "keep-after-uninstall.txt") -Value "preserve"
-          & $installer /VERYSILENT /SUPPRESSMSGBOXES /NORESTART "/DIR=$installDir"
-          if ($LASTEXITCODE -ne 0) { throw "DeskOS installer exited with code $LASTEXITCODE" }
+          $installLog = Join-Path $env:RUNNER_TEMP "DeskOS-installer.log"
+          $process = Start-Process -FilePath $installer -ArgumentList @("/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/DIR=$installDir", "/LOG=$installLog") -Wait -PassThru
+          if ($process.ExitCode -ne 0) { throw "DeskOS installer exited with code $($process.ExitCode)" }
           $exe = Join-Path $installDir "DeskOS.exe"
-          if (-not (Test-Path -LiteralPath $exe)) { throw "Installed DeskOS.exe is missing" }
+          $deadline = (Get-Date).AddSeconds(15)
+          while (-not (Test-Path -LiteralPath $exe) -and (Get-Date) -lt $deadline) { Start-Sleep -Milliseconds 250 }
+          if (-not (Test-Path -LiteralPath $exe)) {
+            if (Test-Path -LiteralPath $installLog) { Get-Content -LiteralPath $installLog }
+            Get-ChildItem -LiteralPath $env:RUNNER_TEMP -Force -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "DeskOS*" } | Select-Object -ExpandProperty FullName
+            throw "Installed DeskOS.exe is missing"
+          }
           $uninstaller = Join-Path $installDir "unins000.exe"
           if (-not (Test-Path -LiteralPath $uninstaller)) { throw "DeskOS uninstaller is missing" }
           $env:DESKOS_HOME = $dataDir

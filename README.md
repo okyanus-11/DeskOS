@@ -17,6 +17,13 @@
   <a href="CHANGELOG.md">Changelog</a>
 </p>
 
+<p align="center">
+  <a href="https://github.com/okyanus-11/DeskOS/releases/download/v1.0.0/DeskOS-Setup-1.0.0.exe"><strong>⬇️ Download for Windows — Installer (.exe)</strong></a>
+  · <a href="https://github.com/okyanus-11/DeskOS/releases/latest">All releases</a>
+</p>
+
+> **Windows 10/11:** Click the installer above to install the app. No Python setup or ZIP extraction required.
+
 ![DeskOS dashboard in the Catppuccin Mocha theme](docs/screenshots/01-dashboard.png)
 
 DeskOS is not a replacement shell: it runs as a normal application next to

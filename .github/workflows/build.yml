@@ -1,22 +1,23 @@
-name: Build executables
+name: Build Windows installer and Linux package
 
 on:
+  push:
+    branches: [main]
+    tags:
+      - "v*"
   workflow_dispatch:
     inputs:
       tag:
         description: "Release tag to publish, for example v1.0.0"
         required: true
         default: "v1.0.0"
-  push:
-    tags:
-      - "v*"
 
 permissions:
   contents: read
 
 jobs:
   windows:
-    name: Windows executable
+    name: Windows installer
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,33 +27,85 @@ jobs:
           python-version: "3.11"
           cache: pip
 
-      - name: Install dependencies
+      - name: Install dependencies and test tools
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install "pyinstaller>=6.0"
+          pip install -e ".[dev,build]"
 
-      - name: Build DeskOS.exe
+      - name: Run test suite
+        run: python -m pytest
+
+      - name: Build DeskOS
         run: python scripts/build.py
 
       - name: Smoke-test the frozen application
         shell: pwsh
         env:
           QT_QPA_PLATFORM: offscreen
-          DESKOS_HOME: ${{ runner.temp }}\deskos-smoke
+          DESKOS_HOME: $${{ runner.temp }}\deskos-build-smoke
         run: |
-          & "dist\DeskOS\DeskOS.exe" --self-test
+          & ".\dist\DeskOS\DeskOS.exe" --self-test
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Package
+      - name: Install Inno Setup
+        run: choco install innosetup --yes --no-progress
+
+      - name: Build setup executable
         shell: pwsh
-        run: Compress-Archive -Path "dist\DeskOS\*" -DestinationPath "DeskOS-windows-x64.zip"
+        run: |
+          $version = python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])"
+          $compiler = Join-Path ${env:ProgramFiles(x86)} "Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path -LiteralPath $compiler)) { throw "Inno Setup compiler not found: $compiler" }
+          & $compiler "/DMyAppVersion=$version" ".\packaging\deskos.iss"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $installer = ".\dist\installer\DeskOS-Setup-$version.exe"
+          if (-not (Test-Path -LiteralPath $installer)) { throw "Installer was not created: $installer" }
+
+      - name: Verify installed app and uninstaller
+        shell: pwsh
+        run: |
+          $version = python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])"
+          $installer = (Resolve-Path ".\dist\installer\DeskOS-Setup-$version.exe").Path
+          $installDir = Join-Path $env:RUNNER_TEMP "DeskOS-install-smoke"
+          $dataDir = Join-Path $env:RUNNER_TEMP "DeskOS-user-data"
+          New-Item -ItemType Directory -Force -Path $dataDir | Out-Null
+          Set-Content -LiteralPath (Join-Path $dataDir "keep-after-uninstall.txt") -Value "preserve"
+          & $installer /VERYSILENT /SUPPRESSMSGBOXES /NORESTART "/DIR=$installDir"
+          if ($LASTEXITCODE -ne 0) { throw "DeskOS installer exited with code $LASTEXITCODE" }
+          $exe = Join-Path $installDir "DeskOS.exe"
+          if (-not (Test-Path -LiteralPath $exe)) { throw "Installed DeskOS.exe is missing" }
+          $uninstaller = Join-Path $installDir "unins000.exe"
+          if (-not (Test-Path -LiteralPath $uninstaller)) { throw "DeskOS uninstaller is missing" }
+          $env:DESKOS_HOME = $dataDir
+          $env:QT_QPA_PLATFORM = "offscreen"
+          & $exe --self-test
+          if ($LASTEXITCODE -ne 0) { throw "Installed DeskOS self-test failed with code $LASTEXITCODE" }
+          & $uninstaller /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
+          if ($LASTEXITCODE -ne 0) { throw "DeskOS uninstaller exited with code $LASTEXITCODE" }
+          if (Test-Path -LiteralPath $exe) { throw "DeskOS application files remain after uninstall" }
+          if (-not (Test-Path -LiteralPath (Join-Path $dataDir "keep-after-uninstall.txt"))) {
+            throw "Uninstall unexpectedly removed user data"
+          }
+
+      - name: Package Windows archive and checksums
+        shell: pwsh
+        run: |
+          Compress-Archive -Path ".\dist\DeskOS\*" -DestinationPath ".\DeskOS-windows-x64.zip" -Force
+          New-Item -ItemType Directory -Force -Path ".\release" | Out-Null
+          $version = python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])"
+          Copy-Item ".\dist\installer\DeskOS-Setup-$version.exe" ".\release\"
+          Copy-Item ".\DeskOS-windows-x64.zip" ".\release\"
+          Get-ChildItem ".\release" -File | ForEach-Object {
+            $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash
+            "$hash  $($_.Name)"
+          } | Set-Content -LiteralPath ".\release\SHA256SUMS.txt" -Encoding ascii
 
       - uses: actions/upload-artifact@v4
         with:
-          name: DeskOS-windows-x64
-          path: DeskOS-windows-x64.zip
+          name: DeskOS-Windows-$${{ github.sha }}
+          path: release/*
           if-no-files-found: error
+          retention-days: 30
 
   linux:
     name: Linux executable
@@ -95,6 +148,7 @@ jobs:
           name: DeskOS-linux-x64
           path: DeskOS-linux-x64.tar.gz
           if-no-files-found: error
+          retention-days: 30
 
   release:
     name: Publish release
@@ -109,16 +163,17 @@ jobs:
           path: artifacts
           merge-multiple: true
 
-      - name: Attach executables to the release
+      - name: Attach installers and packages to the release
         env:
-          GH_TOKEN: ${{ github.token }}
-          TAG: ${{ inputs.tag || github.ref_name }}
+          GH_TOKEN: $${{ github.token }}
+          TAG: $${{ inputs.tag || github.ref_name }}
         run: |
           gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
             gh release create "$TAG" \
               --repo "$GITHUB_REPOSITORY" \
               --target "$GITHUB_SHA" \
               --title "DeskOS $TAG" \
-              --notes "Windows and Linux desktop builds. Extract the archive, then run DeskOS.exe on Windows or DeskOS/DeskOS on Linux; keep the _internal folder beside the executable. The packaged application is smoke-tested with --self-test on both platforms before upload."
-          gh release upload "$TAG" artifacts/*.zip artifacts/*.tar.gz \
+              --notes "Windows setup installer and portable archive, plus the Linux archive. The Windows installer is built with Inno Setup and smoke-tested after installation; the uninstaller is also checked to preserve the user data directory."
+          gh release upload "$TAG" artifacts/DeskOS-Setup-*.exe artifacts/DeskOS-windows-x64.zip \
+            artifacts/DeskOS-linux-x64.tar.gz artifacts/SHA256SUMS.txt \
             --repo "$GITHUB_REPOSITORY" --clobber

@@ -42,7 +42,7 @@ jobs:
         shell: pwsh
         env:
           QT_QPA_PLATFORM: offscreen
-          DESKOS_HOME: $${{ runner.temp }}\deskos-build-smoke
+          DESKOS_HOME: ${{ runner.temp }}\deskos-build-smoke
         run: |
           & ".\dist\DeskOS\DeskOS.exe" --self-test
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -102,7 +102,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: DeskOS-Windows-$${{ github.sha }}
+          name: DeskOS-Windows-${{ github.sha }}
           path: release/*
           if-no-files-found: error
           retention-days: 30
@@ -165,8 +165,8 @@ jobs:
 
       - name: Attach installers and packages to the release
         env:
-          GH_TOKEN: $${{ github.token }}
-          TAG: $${{ inputs.tag || github.ref_name }}
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag || github.ref_name }}
         run: |
           gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
             gh release create "$TAG" \

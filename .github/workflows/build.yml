@@ -166,7 +166,7 @@ jobs:
   release:
     name: Publish release
     needs: [windows, linux]
-    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/') || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -179,7 +179,7 @@ jobs:
       - name: Attach installers and packages to the release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ inputs.tag || github.ref_name }}
+          TAG: ${{ inputs.tag || (startsWith(github.ref, 'refs/tags/') && github.ref_name) || 'v1.0.0' }}
         run: |
           gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
             gh release create "$TAG" \
@@ -187,6 +187,5 @@ jobs:
               --target "$GITHUB_SHA" \
               --title "DeskOS $TAG" \
               --notes "Windows setup installer and portable archive, plus the Linux archive. The Windows installer is built with Inno Setup and smoke-tested after installation; the uninstaller is also checked to preserve the user data directory."
-          gh release upload "$TAG" artifacts/DeskOS-Setup-*.exe artifacts/DeskOS-windows-x64.zip \
-            artifacts/DeskOS-linux-x64.tar.gz artifacts/SHA256SUMS.txt \
+          gh release upload "$TAG" artifacts/DeskOS-Setup-*.exe artifacts/SHA256SUMS.txt \
             --repo "$GITHUB_REPOSITORY" --clobber

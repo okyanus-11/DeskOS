@@ -87,7 +87,7 @@ jobs:
           $uninstallProcess = Start-Process -FilePath $uninstaller -ArgumentList @("/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART") -Wait -PassThru
           if ($uninstallProcess.ExitCode -ne 0) { throw "DeskOS uninstaller exited with code $($uninstallProcess.ExitCode)" }
           $deadline = (Get-Date).AddSeconds(15)
-          while (Test-Path -LiteralPath $exe -and (Get-Date) -lt $deadline) { Start-Sleep -Milliseconds 250 }
+          while ((Test-Path -LiteralPath $exe) -and ((Get-Date) -lt $deadline)) { Start-Sleep -Milliseconds 250 }
           if (Test-Path -LiteralPath $exe) { throw "DeskOS application files remain after uninstall" }
           if (-not (Test-Path -LiteralPath (Join-Path $dataDir "keep-after-uninstall.txt"))) {
             throw "Uninstall unexpectedly removed user data"
